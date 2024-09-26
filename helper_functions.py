@@ -4,77 +4,56 @@ import torch
 from torch import nn
 import torchvision
 device = "cuda" if torch.cuda.is_available() else "cpu"
-
 def train_step_(model: torch.nn.Module,
                dataloader: torch.utils.data.DataLoader,
                loss_fn: torch.nn.Module,
                optimizer: torch.optim.Optimizer):
-    # Put model in train mode
     model.train()
-
-    # Setup train loss and train accuracy values
     train_loss, train_acc = 0, 0
 
-    # Loop through data loader data batches
     for batch, (X, y) in enumerate(dataloader):
-        # Send data to target device
         X, y = X.to(device), y.to(device)
 
-        # 1. Forward pass
+        # Forward pass and squeeze predictions
         y_pred = torch.squeeze(model(X))
 
-        # 2. Calculate  and accumulate loss
+        # Calculate loss
         loss = loss_fn(y_pred, y)
         train_loss += loss.item()
 
-        # 3. Optimizer zero grad
         optimizer.zero_grad()
-
-        # 4. Loss backward
         loss.backward()
-
-        # 5. Optimizer step
         optimizer.step()
 
-        # Calculate and accumulate accuracy metrics across all batches
-        y_pred_class = torch.round(y_pred)  # y_pred is a probability, round it to get binary class (0 or 1)
-        train_acc += (y_pred_class == y).sum().item()/len(y_pred)
+        y_pred_class = torch.round(y_pred)
+        train_acc += (y_pred_class == y).sum().item() / len(y_pred)
 
-    # Adjust metrics to get average loss and accuracy per batch
-    train_loss = train_loss / len(dataloader)
-    train_acc = train_acc / len(dataloader)
+    train_loss /= len(dataloader)
+    train_acc /= len(dataloader)
     return train_loss, train_acc
-def test_step(model: torch.nn.Module,
+                 def test_step(model: torch.nn.Module,
               dataloader: torch.utils.data.DataLoader,
               loss_fn: torch.nn.Module):
-    # Put model in eval mode
     model.eval()
-
-    # Setup test loss and test accuracy values
     test_loss, test_acc = 0, 0
 
-    # Turn on inference context manager
     with torch.inference_mode():
-        # Loop through DataLoader batches
         for batch, (X, y) in enumerate(dataloader):
-            # Send data to target device
             X, y = X.to(device), y.to(device)
 
-            # 1. Forward pass
-            test_pred = model(X)
+            # Forward pass and squeeze predictions
+            test_pred = torch.squeeze(model(X))
 
-            # 2. Calculate and accumulate loss
+            # Calculate loss
             loss = loss_fn(test_pred, y)
             test_loss += loss.item()
 
-            # 3. Calculate and accumulate accuracy
-            # For binary classification, round the probabilities to get predictions
-            test_pred_labels = torch.round(test_pred)  # Rounds probabilities to 0 or 1
-            test_acc += ((test_pred_labels == y).sum().item() / len(test_pred_labels))
+            # Calculate accuracy
+            test_pred_labels = torch.round(test_pred)
+            test_acc += (test_pred_labels == y).sum().item() / len(test_pred_labels)
 
-    # Adjust metrics to get average loss and accuracy per batch
-    test_loss = test_loss / len(dataloader)
-    test_acc = test_acc / len(dataloader)
+    test_loss /= len(dataloader)
+    test_acc /= len(dataloader)
     
     return test_loss, test_acc
 

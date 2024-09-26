@@ -21,7 +21,7 @@ def train_step(model: torch.nn.Module,
         X, y = X.to(device), y.to(device)
 
         # 1. Forward pass
-        y_pred = model(X)
+        y_pred = torch.squeeze(model(X))
 
         # 2. Calculate  and accumulate loss
         loss = loss_fn(y_pred, y)

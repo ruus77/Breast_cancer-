@@ -5,7 +5,7 @@ from torch import nn
 import torchvision
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-def train_step(model: torch.nn.Module,
+def train_step_(model: torch.nn.Module,
                dataloader: torch.utils.data.DataLoader,
                loss_fn: torch.nn.Module,
                optimizer: torch.optim.Optimizer):
